@@ -1,4 +1,12 @@
-import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Put,
+} from '@nestjs/common';
 import { UserService } from '../services/user.service';
 import { CreateUserDto, UpdateUserDto } from '../dto/user.dto';
 import { UserUpdateValidationPipe } from '../pipes/userUpdateValidation.pipe';
@@ -26,7 +34,10 @@ export class UserController {
   }
 
   @Put(':id')
-  async updateUser(@Param() params: { id: string }, @Body(new UserUpdateValidationPipe()) updateUserDto: UpdateUserDto): Promise<UserModel> {
+  async updateUser(
+    @Param() params: { id: string },
+    @Body(new UserUpdateValidationPipe()) updateUserDto: UpdateUserDto,
+  ): Promise<UserModel> {
     return this.userService.updateUser(params.id, updateUserDto);
   }
 

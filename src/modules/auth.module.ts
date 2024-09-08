@@ -14,7 +14,7 @@ import { AuthGuard } from '../guards/auth.guard';
       secret: process.env.JWT_SECRET,
       signOptions: { expiresIn: '60s' },
     }),
-  ], 
+  ],
   controllers: [AuthController],
   providers: [
     AuthService,
