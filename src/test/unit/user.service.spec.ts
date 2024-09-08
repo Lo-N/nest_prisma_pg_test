@@ -1,6 +1,6 @@
 import { HttpException, HttpStatus } from '@nestjs/common';
-import { PrismaService } from '../../db/prisma.service';
-import { UserService } from '../../user/user.service';
+import { PrismaService } from '../../services/prisma.service';
+import { UserService } from '../../services/user.service';
 
 describe('UserService', () => {
   let userService: UserService;

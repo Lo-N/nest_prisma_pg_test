@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { PrismaService } from '../db/prisma.service';
-import { CreateUserDto, UpdateUserDto } from './user.dto';
-import { UserModel } from './user.model';
+import { PrismaService } from './prisma.service';
+import { CreateUserDto, UpdateUserDto } from '../dto/user.dto';
+import { UserModel } from '../models/user.model';
 
 @Injectable()
 export class UserService {
@@ -15,6 +15,15 @@ export class UserService {
     const user = await this.prisma.user.findUnique({ where: { id } });
     if (!user) {
       throw new HttpException(`User with id ${id} not found`, HttpStatus.NOT_FOUND);
+    }
+
+    return user
+  }
+
+  async getUserByLogin(login: string): Promise<UserModel> {
+    const user = await this.prisma.user.findUnique({ where: { login }});
+    if (!user) {
+      throw new HttpException(`User with login ${login} not found`, HttpStatus.NOT_FOUND);
     }
 
     return user
