@@ -12,7 +12,7 @@ export class UserService {
   }
 
   async getUser(id: string): Promise<UserModel> {
-    const user = await this.prisma.user.findUnique({where: { id }});
+    const user = await this.prisma.user.findUnique({ where: { id } });
     if (!user) {
       throw new HttpException(`User with id ${id} not found`, HttpStatus.NOT_FOUND);
     }
@@ -21,19 +21,32 @@ export class UserService {
   }
 
   async createUser(userData: CreateUserDto): Promise<UserModel> {
-    return this.prisma.user.create({data: userData});
+    try {
+      return await this.prisma.user.create({ data: userData });
+    } catch (error) {
+      console.error(`An error occur at ${this.createUser.name}`, error);
+      throw new HttpException('Unable to create user with provided data', HttpStatus.BAD_REQUEST);
+    }
   }
 
   async updateUser(id: string, userData: UpdateUserDto): Promise<UserModel> {
-    return this.prisma.user.update({
-      where: { id },
-      data: userData,
-    })
+    try {
+      return await this.prisma.user.update({
+        where: { id },
+        data: userData,
+      });
+    } catch (error) {
+      console.error(`An error occur at ${this.updateUser.name}`, error);
+      throw new HttpException(`Unable to update user with ID ${id}`, HttpStatus.BAD_REQUEST);
+    }
   }
 
   async deleteUser(id: string): Promise<UserModel> {
-    return await this.prisma.user.delete({
-      where: { id },
-    });
+    try {
+      return await this.prisma.user.delete({ where: { id } });
+    } catch (error) {
+      console.error(`An error occur at ${this.deleteUser.name}`, error);
+      throw new HttpException(`Unable to delete user with ID ${id}`, HttpStatus.BAD_REQUEST);
+    }
   }
 }
