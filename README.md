@@ -22,7 +22,7 @@ Step-by-step
 1. Clone project `git clone https://github.com/Lo-N/test_task.git`
 
 2. Install dependencies `npm install --frozen-lockfile`  
-JFY: The version of node.js used is specified in the `.node-version` file
+JFYI: The version of node.js used is specified in the `.node-version` file
 
 3. Run NestJS app `npm run start:dev`
 
