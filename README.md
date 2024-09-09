@@ -1,5 +1,13 @@
 # NestJS test task
 
+> [!NOTE]
+> This project will be gradually supplemented.
+> - Unit test coverage will be increased.
+> - E2E tests will be added.
+> - The number of commands for running the project will be reduced
+> - Pre-commit scripts will be added
+> - ...
+
 Scope:
 1) Basic API development
 2) Middleware implementation
