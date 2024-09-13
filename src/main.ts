@@ -8,8 +8,10 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.useGlobalPipes(new ValidationPipe());
   const httpAdapter = app.get(HttpAdapterHost);
-  app.useGlobalFilters(new AllExceptionsFilter(httpAdapter));
-  app.useGlobalFilters(new HttpExceptionFilter());
-  await app.listen(3000);
+  app.useGlobalFilters(
+    new AllExceptionsFilter(httpAdapter),
+    new HttpExceptionFilter(),
+  );
+  await app.listen(process.env.APP_PORT || '3000');
 }
 bootstrap();
