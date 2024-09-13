@@ -1,15 +1,21 @@
 import { HttpException, HttpStatus } from '@nestjs/common';
-import { PrismaService } from '../../services/prisma.service';
-import { UserService } from '../../services/user.service';
+import { PrismaService } from '../../src/services/prisma.service';
+import { UserService } from '../../src/services/user.service';
+import { ConfigService } from '@nestjs/config';
+import { Test } from '@nestjs/testing';
 
 describe('UserService', () => {
   let userService: UserService;
   let prismaService: PrismaService;
   const userId = '123';
 
-  beforeEach(() => {
-    prismaService = new PrismaService();
-    userService = new UserService(prismaService);
+  beforeEach(async () => {
+    const moduleRef = await Test.createTestingModule({
+      providers: [UserService, PrismaService, ConfigService],
+    }).compile();
+
+    userService = moduleRef.get<UserService>(UserService);
+    prismaService = moduleRef.get<PrismaService>(PrismaService);
   });
 
   afterAll(() => {
