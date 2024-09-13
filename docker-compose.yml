@@ -1,16 +1,35 @@
 version: '3.8'
+
 services:
 
-  postgres:
-    image: postgres:13.5
-    restart: always
+  db:
+    container_name: db
+    image: postgres:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.postres
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-    volumes:
-      - postgres:/var/lib/postgresql/data
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
     ports:
-      - '5432:5432'
+      - "${DB_PORT}:5432"
+
+  app:
+    depends_on:
+      - db
+    volumes:
+      - '.:/app'
+      - '/app/node_modules'
+    restart: always
+    env_file:
+      - .env
+    container_name: app
+    build:
+      context: .
+      dockerfile: Dockerfile.app
+    ports:
+      - "${APP_PORT}:${APP_PORT}"
 
 volumes:
   postgres:
