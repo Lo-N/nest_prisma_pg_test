@@ -6,6 +6,8 @@
 > - E2E tests will be added.
 > - The number of commands for running the project will be reduced
 > - Pre-commit scripts will be added
+> - DTO validation will be updated
+> - Password encryption will be added
 > - ...
 
 Scope:
