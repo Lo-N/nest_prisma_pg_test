@@ -1,8 +1,11 @@
 import { HttpException, HttpStatus } from '@nestjs/common';
-import { PrismaService } from '../../src/services/prisma.service';
-import { UserService } from '../../src/services/user.service';
+import { PrismaService } from 'src/services/prisma.service';
+import { UserService } from 'src/services/user.service';
 import { ConfigService } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
+import { CreateUserDto } from 'src/dto/user.dto';
+import { EUserRoles } from 'src/enums/user.enum';
+import { UpdateUserDto } from 'src/dto/updateUser.dto';
 
 describe('UserService', () => {
   let userService: UserService;
@@ -80,8 +83,50 @@ describe('UserService', () => {
     });
   });
 
+  describe('getUserByLogin', () => {
+    it('should return result of findUnique method', async () => {
+      const result = {} as any;
+      jest
+        .spyOn(prismaService.user, 'findUnique')
+        .mockImplementation(() => result);
+
+      expect(await userService.getUser(userId)).toBe(result);
+    });
+
+    it('should throw an error on error during findUnique', async () => {
+      const error = new Error('test');
+      jest.spyOn(prismaService.user, 'findUnique').mockImplementation(() => {
+        throw error;
+      });
+
+      expect(async () => {
+        await userService.getUser(userId);
+      }).rejects.toThrow(error);
+    });
+
+    it('should throw HttpException when user is not found', async () => {
+      const error = new HttpException(
+        `User with id ${userId} not found`,
+        HttpStatus.NOT_FOUND,
+      );
+      jest
+        .spyOn(prismaService.user, 'findUnique')
+        .mockImplementation(() => null as any);
+
+      expect(async () => {
+        await userService.getUser(userId);
+      }).rejects.toThrow(error);
+    });
+  });
+
   describe('createUser', () => {
-    const userData = {} as any;
+    const userData: CreateUserDto = {
+      login: 'test-user-login',
+      password: 'test-user-password',
+      name: 'test-user-name',
+      age: 25,
+      role: EUserRoles.Admin,
+    };
     it('should return result of create method', async () => {
       const result = {} as any;
       jest.spyOn(prismaService.user, 'create').mockImplementation(() => result);
@@ -106,7 +151,7 @@ describe('UserService', () => {
   });
 
   describe('updateUser', () => {
-    const userData = { password: 'new' };
+    const userData: UpdateUserDto = { password: 'new' };
 
     it('should return result of update method', async () => {
       const result = {} as any;
