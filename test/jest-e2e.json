@@ -7,7 +7,6 @@
   },
   "testEnvironment": "node",
   "moduleNameMapper": {
-    "src/(./)": "<rootDir>/src/$1",
-    "test/(./)": "<rootDir>/test"
+   "^src/(.*)": "<rootDir>/../../src/$1"
   }
 }
