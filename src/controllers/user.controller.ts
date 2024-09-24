@@ -13,6 +13,7 @@ import { UserUpdateValidationPipe } from '../pipes/userUpdateValidation.pipe';
 import { UserModel } from '../models/user.model';
 import { Public } from '../decorators/route.decorator';
 import { UpdateUserDto } from 'src/dto/updateUser.dto';
+import { IPublicUserData } from 'src/interfaces/publicUserData.interface';
 
 @Controller('users')
 export class UserController {
@@ -20,17 +21,17 @@ export class UserController {
 
   @Public()
   @Get()
-  async getUsers(): Promise<UserModel[]> {
-    return this.userService.getUsers();
+  async getAllUsers(): Promise<UserModel[]> {
+    return this.userService.getAllUsers();
   }
 
   @Get(':id')
-  async getUser(@Param() params: { id: string }): Promise<UserModel> {
-    return this.userService.getUser(params.id);
+  async getUserById(@Param() params: { id: string }): Promise<IPublicUserData> {
+    return this.userService.getUserById(params.id);
   }
 
   @Post()
-  async createUser(@Body() userDto: CreateUserDto): Promise<UserModel> {
+  async createUser(@Body() userDto: CreateUserDto): Promise<IPublicUserData> {
     return this.userService.createUser(userDto);
   }
 
@@ -38,12 +39,12 @@ export class UserController {
   async updateUser(
     @Param() params: { id: string },
     @Body(new UserUpdateValidationPipe()) updateUserDto: UpdateUserDto,
-  ): Promise<UserModel> {
+  ): Promise<IPublicUserData> {
     return this.userService.updateUser(params.id, updateUserDto);
   }
 
   @Delete(':id')
-  async deleteUser(@Param() params: { id: string }): Promise<UserModel> {
+  async deleteUser(@Param() params: { id: string }): Promise<IPublicUserData> {
     return this.userService.deleteUser(params.id);
   }
 }
