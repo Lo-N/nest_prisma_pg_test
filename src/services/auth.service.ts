@@ -23,7 +23,7 @@ export class AuthService {
         access_token: await this.jwtService.signAsync(payload),
       };
     } catch (error) {
-      console.error(`An error occur at ${this.signIn.name}`, error);
+      console.warn(`An error occur at ${this.signIn.name}`, error);
       throw new UnauthorizedException();
     }
   }
