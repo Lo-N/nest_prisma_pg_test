@@ -1,5 +1,5 @@
 import { PipeTransform, Injectable, BadRequestException } from '@nestjs/common';
-import { UpdateUserDto } from '../dto/user.dto';
+import { UpdateUserDto } from 'src/dto/updateUser.dto';
 
 @Injectable()
 export class UserUpdateValidationPipe implements PipeTransform {
