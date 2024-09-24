@@ -8,7 +8,7 @@ async function main() {
       login: 'agent007',
       name: 'James',
       age: 40,
-      password: 'agent008',
+      password: '$2b$10$zcQxglSy01EfbsMeUXI.VuEyRDMZIpJfWev88gi6ZlMnjo4pUssTi', //'agent008',
     },
   })
   const user2 = await prisma.user.upsert({
@@ -18,7 +18,7 @@ async function main() {
       login: 'Mike777',
       name: 'Joe',
       age: 50,
-      password: '123qwe',
+      password: '$2b$10$Q9rYZUZKzzX8Khxhr2pXhuxBks4jbR3W0fVp760ian6WBKl/002fG', //'123qwe',
     },
   })
   console.log({ user1, user2 })
