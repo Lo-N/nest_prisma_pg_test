@@ -20,7 +20,7 @@ export class UserService {
   constructor(private prisma: PrismaService) {}
 
   removeUsersPassword(user: UserModel): IPublicUserData {
-    // @ts-ignore field 'password' is assigned a value but never used
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...publicUsersData } = user;
 
     return publicUsersData;
