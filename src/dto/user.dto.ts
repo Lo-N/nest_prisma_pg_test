@@ -5,7 +5,7 @@ import {
   IsPositive,
   IsString,
 } from 'class-validator';
-import { EUserRoles } from '../enums/user.enum';
+import { Role } from '@prisma/client';
 
 export class CreateUserDto {
   @IsString()
@@ -24,6 +24,6 @@ export class CreateUserDto {
   @IsPositive()
   age: number;
 
-  @IsEnum(EUserRoles)
-  role: EUserRoles;
+  @IsEnum(Role)
+  role: Role;
 }
