@@ -26,9 +26,7 @@ export class AuthService {
         await this.userService.getUserByLogin(incomingLogin);
 
       if (!(await compare(pass, password))) {
-        throw new UnauthorizedException(
-          UserErrorMessages.INVALID_CREDENTIALS(),
-        );
+        throw new Error(UserErrorMessages.INVALID_CREDENTIALS());
       }
 
       const payload = { id, login, role };
@@ -37,13 +35,8 @@ export class AuthService {
       };
     } catch (error) {
       console.warn(`An error occur at ${this.signIn.name}`, error);
-      if (error instanceof HttpException) {
-        throw error;
-      }
 
-      throw new InternalServerErrorException(
-        UserErrorMessages.SOMETHING_WENT_WRONG(),
-      );
+      throw new UnauthorizedException(UserErrorMessages.INVALID_CREDENTIALS());
     }
   }
 

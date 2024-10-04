@@ -3,10 +3,11 @@ import { HttpStatus, INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from '../../src/modules/app.module';
 import { PrismaService } from '../../src/services/prisma.service';
-import { EUserRoles } from '../../src/enums/user.enum';
-import { $Enums, Prisma } from '@prisma/client';
+import { $Enums, Prisma, PrismaClient, Role } from '@prisma/client';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import { mockDeep } from 'jest-mock-extended';
+import { UserErrorMessages } from 'src/utils/userErrorMessages.utils';
 
 describe('Authentication /auth/login (POST) (e2e)', () => {
   let app: INestApplication;
@@ -16,15 +17,17 @@ describe('Authentication /auth/login (POST) (e2e)', () => {
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    })
+      .overrideProvider(PrismaService)
+      .useValue(mockDeep<PrismaClient>())
+      .compile();
     prismaService = moduleFixture.get<PrismaService>(PrismaService);
     jwtService = moduleFixture.get<JwtService>(JwtService);
-    jest.spyOn(prismaService, 'onModuleInit').mockImplementation(jest.fn());
 
     app = moduleFixture.createNestApplication();
     app.useGlobalPipes(new ValidationPipe());
 
-    jest.spyOn(console, 'warn').mockImplementation()
+    jest.spyOn(console, 'warn').mockImplementation();
 
     await app.init();
   });
@@ -35,7 +38,7 @@ describe('Authentication /auth/login (POST) (e2e)', () => {
 
   it('Should return bad request when request body is empty', () => {
     return request(app.getHttpServer())
-      .post('/auth/login')
+      .post('/auth/signIn')
       .send({})
       .expect(400)
       .expect({
@@ -56,14 +59,19 @@ describe('Authentication /auth/login (POST) (e2e)', () => {
       password: 'unknown_password',
     };
 
-    jest.spyOn(prismaService.user, 'findUnique').mockImplementation(jest.fn());
+    jest
+      .spyOn(prismaService.user, 'findUniqueOrThrow')
+      .mockImplementation(() => {
+        throw new Error();
+      });
 
     return request(app.getHttpServer())
-      .post('/auth/login')
+      .post('/auth/signIn')
       .send(unknownCredentials)
       .expect(401)
       .expect({
-        message: 'Unauthorized',
+        message: UserErrorMessages.INVALID_CREDENTIALS(),
+        error: 'Unauthorized',
         statusCode: HttpStatus.UNAUTHORIZED,
       });
   });
@@ -82,10 +90,10 @@ describe('Authentication /auth/login (POST) (e2e)', () => {
       createdAt: new Date(),
       updatedAt: new Date(),
       age: 20,
-      role: EUserRoles.Guest,
+      role: Role.guest,
     };
 
-    jest.spyOn(bcrypt, 'compare').mockImplementationOnce(() => true)
+    jest.spyOn(bcrypt, 'compare').mockImplementationOnce(() => true);
 
     jest.spyOn(prismaService.user, 'findUniqueOrThrow').mockImplementation(
       () =>
@@ -105,7 +113,7 @@ describe('Authentication /auth/login (POST) (e2e)', () => {
     jest.spyOn(jwtService, 'signAsync').mockResolvedValue(mockJwtToken);
 
     const res = await request(app.getHttpServer())
-      .post('/auth/login')
+      .post('/auth/signIn')
       .send(credentials);
 
     expect(res.body.access_token).toBe(mockJwtToken);
