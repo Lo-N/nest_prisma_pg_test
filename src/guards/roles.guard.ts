@@ -1,23 +1,33 @@
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
-import { EUserRoles } from '../enums/user.enum';
-import { UserService } from 'src/services/user.service';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+} from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
+import { Roles } from 'src/decorators/role.decorator';
+import { UserErrorMessages } from 'src/utils/userErrorMessages.utils';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
-  constructor(
-    private role: EUserRoles,
-    private userService: UserService,
-  ) {}
+  constructor(private reflector: Reflector) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
+    const roles = this.reflector.get(Roles, context.getHandler());
+    if (!roles) {
+      return true;
+    }
+
     const request = context.switchToHttp().getRequest();
     const requestUser = request.user;
-    if (!requestUser?.username) {
+    if (!requestUser?.role) {
       return false;
     }
 
-    const user = await this.userService.getUserByLogin(requestUser?.username);
-
-    return user.role === this.role;
+    if (roles.includes(requestUser?.role)) {
+      return true;
+    } else {
+      throw new ForbiddenException(UserErrorMessages.ACCESS_DENIED());
+    }
   }
 }

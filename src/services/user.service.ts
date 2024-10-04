@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   HttpException,
   HttpStatus,
@@ -14,12 +15,13 @@ import { IPublicUserData } from 'src/interfaces/publicUserData.interface';
 import { Prisma } from '@prisma/client';
 import { EPrismaErrorCodes } from 'src/enums/prisma.enum';
 import { UserErrorMessages } from 'src/utils/userErrorMessages.utils';
+import { RegistrationDto } from 'src/dto/registration.dto';
 
 @Injectable()
 export class UserService {
   constructor(private prisma: PrismaService) {}
 
-  removeUsersPassword(user: UserModel): IPublicUserData {
+  removeUserPassword(user: UserModel): IPublicUserData {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...publicUsersData } = user;
 
@@ -60,7 +62,9 @@ export class UserService {
     }
   }
 
-  async createUser(userData: CreateUserDto): Promise<IPublicUserData> {
+  async createUser(
+    userData: CreateUserDto | RegistrationDto,
+  ): Promise<IPublicUserData> {
     try {
       const user = await this.prisma.user.create({
         data: {
@@ -69,7 +73,7 @@ export class UserService {
         },
       });
 
-      return this.removeUsersPassword(user);
+      return this.removeUserPassword(user);
     } catch (error) {
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
@@ -81,10 +85,7 @@ export class UserService {
       }
 
       console.warn(`An error occur at ${this.createUser.name}`, error);
-      throw new HttpException(
-        UserErrorMessages.UNABLE_TO_CREATE_USER(),
-        HttpStatus.BAD_REQUEST,
-      );
+      throw new BadRequestException(UserErrorMessages.UNABLE_TO_CREATE_USER());
     }
   }
 
@@ -100,7 +101,7 @@ export class UserService {
           : userData,
       });
 
-      return this.removeUsersPassword(user);
+      return this.removeUserPassword(user);
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         if (error.code === EPrismaErrorCodes.UnableToFindDuringAnOperation) {
@@ -128,7 +129,7 @@ export class UserService {
     try {
       const user = await this.prisma.user.delete({ where: { id } });
 
-      return this.removeUsersPassword(user);
+      return this.removeUserPassword(user);
     } catch (error) {
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&

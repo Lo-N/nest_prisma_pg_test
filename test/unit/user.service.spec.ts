@@ -8,10 +8,9 @@ import { PrismaService } from 'src/services/prisma.service';
 import { UserService } from 'src/services/user.service';
 import { ConfigService } from '@nestjs/config';
 import { CreateUserDto } from 'src/dto/user.dto';
-import { EUserRoles } from 'src/enums/user.enum';
 import { UpdateUserDto } from 'src/dto/updateUser.dto';
 import { UserModel } from 'src/models/user.model';
-import { Prisma } from '@prisma/client';
+import { Prisma, Role } from '@prisma/client';
 import { EPrismaErrorCodes } from 'src/enums/prisma.enum';
 import { UserErrorMessages } from 'src/utils/userErrorMessages.utils';
 
@@ -24,7 +23,7 @@ describe('UserService', () => {
   const mockPassword = 'test-user-password';
   const mockName = 'test-user-name';
   const mockAge = 25;
-  const mockRole = EUserRoles.Admin;
+  const mockRole = Role.admin;
   const publicUserData = {
     id: mockUserId,
     login: mockLogin,
@@ -50,10 +49,10 @@ describe('UserService', () => {
     jest.clearAllMocks();
   });
 
-  describe('removeUsersPassword', () => {
+  describe('removeUserPassword', () => {
     it("should return user's public data", () => {
       expect(
-        userService.removeUsersPassword({
+        userService.removeUserPassword({
           ...publicUserData,
           password: mockPassword,
         }),
@@ -148,15 +147,15 @@ describe('UserService', () => {
         .spyOn(prismaService.user, 'create')
         .mockImplementationOnce(() => dbUser as any);
 
-      const removeUsersPasswordMethod = jest.spyOn(
+      const removeUserPasswordMethod = jest.spyOn(
         userService,
-        'removeUsersPassword',
+        'removeUserPassword',
       );
 
       await expect(userService.createUser(userCreateData)).resolves.toEqual(
         publicUserData,
       );
-      expect(removeUsersPasswordMethod).toHaveBeenCalledTimes(1);
+      expect(removeUserPasswordMethod).toHaveBeenCalledTimes(1);
     });
 
     it('should throw ConflictException on constraint error during create method', async () => {
@@ -201,16 +200,16 @@ describe('UserService', () => {
         .spyOn(prismaService.user, 'update')
         .mockImplementationOnce(() => dbUser as any);
 
-      const removeUsersPasswordMethod = jest.spyOn(
+      const removeUserPasswordMethod = jest.spyOn(
         userService,
-        'removeUsersPassword',
+        'removeUserPassword',
       );
 
       await expect(
         userService.updateUser(mockUserId, userData),
       ).resolves.toEqual(publicUserData);
 
-      expect(removeUsersPasswordMethod).toHaveBeenCalledTimes(1);
+      expect(removeUserPasswordMethod).toHaveBeenCalledTimes(1);
     });
 
     it('should throw NotFoundException when user not found during update method', async () => {
@@ -272,15 +271,15 @@ describe('UserService', () => {
         .spyOn(prismaService.user, 'delete')
         .mockImplementationOnce(() => dbUser as any);
 
-      const removeUsersPasswordMethod = jest.spyOn(
+      const removeUserPasswordMethod = jest.spyOn(
         userService,
-        'removeUsersPassword',
+        'removeUserPassword',
       );
 
       await expect(userService.deleteUser(dbUser.id)).resolves.toEqual(
         publicUserData,
       );
-      expect(removeUsersPasswordMethod).toHaveBeenCalledTimes(1);
+      expect(removeUserPasswordMethod).toHaveBeenCalledTimes(1);
     });
 
     it('should throw NotFoundException when user not found', async () => {

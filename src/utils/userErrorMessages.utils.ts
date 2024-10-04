@@ -7,6 +7,14 @@ export const UserErrorMessages = {
   UNABLE_TO_UPDATE_USER: (id: string) => `Unable to update user with ID ${id}`,
   UNABLE_TO_DELETE_USER: (id: string) => `Unable to delete user with ID ${id}`,
 
+  ACCESS_DENIED: () => 'Access denied',
+
+  INVALID_CREDENTIALS: () => 'Invalid credentials',
+
+  SOMETHING_WENT_WRONG: () => 'Something went wrong',
+
+  INTERNAL_SERVER_ERROR: () => 'Internal server error',
+
   LOGIN_ALREADY_REGISTERED: (login: string) =>
     `Login - ${login} already registered`,
 };

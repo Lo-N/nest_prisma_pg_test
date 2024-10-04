@@ -3,6 +3,8 @@ import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from '../../src/modules/app.module';
 import { PrismaService } from '../../src/services/prisma.service';
+import { PrismaClient } from '@prisma/client';
+import { mockDeep } from 'jest-mock-extended';
 
 describe('Health check (e2e)', () => {
   let app: INestApplication;
@@ -10,11 +12,11 @@ describe('Health check (e2e)', () => {
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    })
+      .overrideProvider(PrismaService)
+      .useValue(mockDeep<PrismaClient>())
+      .compile();
 
-    jest
-      .spyOn(moduleFixture.get<PrismaService>(PrismaService), 'onModuleInit')
-      .mockImplementation(jest.fn());
     app = moduleFixture.createNestApplication();
     await app.init();
   });

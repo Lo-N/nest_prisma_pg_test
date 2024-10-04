@@ -5,6 +5,7 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { HttpAdapterHost } from '@nestjs/core';
+import { UserErrorMessages } from 'src/utils/userErrorMessages.utils';
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
@@ -21,7 +22,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
       timestamp: new Date().toISOString(),
       path: httpAdapter.getRequestUrl(ctx.getRequest()),
-      message: 'Internal server error',
+      message: UserErrorMessages.INTERNAL_SERVER_ERROR(),
     };
 
     httpAdapter.reply(
