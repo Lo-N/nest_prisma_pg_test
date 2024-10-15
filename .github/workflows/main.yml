@@ -1,8 +1,13 @@
-name: test workflow
-on: workflow_dispatch
+name: run unit tests
+on: push
 jobs: 
-  print:
+  test:
     runs-on: ubuntu-latest
     steps:
-      - name: print-test-message
-        run: echo Hello!
+      - name: get repo code
+        uses: actions/checkout@3
+      - name: install depend
+        run: npm ci
+      - name: run unit tests
+        run: npm run test:unit
+      
