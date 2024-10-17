@@ -13,6 +13,7 @@ import { UserModel } from 'src/models/user.model';
 import { Prisma, Role } from '@prisma/client';
 import { EPrismaErrorCodes } from 'src/enums/prisma.enum';
 import { UserErrorMessages } from 'src/utils/userErrorMessages.utils';
+import { Test, TestingModule } from '@nestjs/testing';
 
 describe('UserService', () => {
   let userService: UserService;
@@ -38,10 +39,27 @@ describe('UserService', () => {
     ...publicUserData,
   };
 
-  beforeEach(() => {
-    const configService = new ConfigService();
-    prismaService = new PrismaService(configService);
-    userService = new UserService(prismaService);
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        PrismaService,
+        UserService,
+        {
+          provide: ConfigService,
+          useValue: {
+            get: jest.fn((key: string) => {
+              if (key === 'DATABASE_URL') {
+                return 'postgresql://postgres:postgres';
+              }
+              return 'mock';
+            }),
+          },
+        },
+      ],
+    }).compile();
+
+    prismaService = module.get<PrismaService>(PrismaService);
+    userService = module.get<UserService>(UserService);
     jest.spyOn(console, 'warn').mockImplementation();
   });
 
