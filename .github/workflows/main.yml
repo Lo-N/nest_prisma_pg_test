@@ -49,7 +49,7 @@ jobs:
           key: node-modules-${{ hashFiles('**/package-lock.json')}}
       - name: install depend
         run: npm ci
-      - name: run unit tests
+      - name: run build
         run: npm run build
       - name: Deploy
         run: echo Deploy...TODO
