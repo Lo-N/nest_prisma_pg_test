@@ -16,6 +16,7 @@ async function main() {
     where: { login: 'Mike777' },
     update: {},
     create: {
+      id: '6afebd76-48b8-4b70-bbe2-86724a772125',
       login: 'Mike777',
       name: 'Joe',
       age: 50,
