@@ -18,6 +18,7 @@ import { IPublicUserData } from 'src/interfaces/publicUserData.interface';
 import { RolesGuard } from 'src/guards/roles.guard';
 import { Roles } from 'src/decorators/role.decorator';
 import { Role } from '@prisma/client';
+import { ApiOperation, ApiParam } from '@nestjs/swagger';
 
 @Controller('users')
 export class UserController {
@@ -31,6 +32,8 @@ export class UserController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Get user by id' })
+  @ApiParam({ name: 'id', type: 'string', description: 'User UUID' })
   async getUserById(@Param() params: { id: string }): Promise<IPublicUserData> {
     return this.userService.getUserById(params.id);
   }
