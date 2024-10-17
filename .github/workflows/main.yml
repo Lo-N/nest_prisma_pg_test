@@ -1,7 +1,7 @@
 name: Deploy
 on:
   pull_request:
-    types: [opened, edited, reopened]
+    types: [opened, edited, reopened, synchronize]
     branches: [ "main", "development" ]
     paths-ignore:
       - '.dockerignore'
