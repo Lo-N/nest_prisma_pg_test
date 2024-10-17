@@ -1,74 +1,146 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  HttpException,
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { hash } from 'bcrypt';
 import { PrismaService } from './prisma.service';
-import { CreateUserDto, UpdateUserDto } from '../dto/user.dto';
+import { CreateUserDto } from '../dto/user.dto';
 import { UserModel } from '../models/user.model';
+import { UpdateUserDto } from 'src/dto/updateUser.dto';
+import { IPublicUserData } from 'src/interfaces/publicUserData.interface';
+import { Prisma } from '@prisma/client';
+import { EPrismaErrorCodes } from 'src/enums/prisma.enum';
+import { UserErrorMessages } from 'src/utils/userErrorMessages.utils';
+import { RegistrationDto } from 'src/dto/registration.dto';
 
 @Injectable()
 export class UserService {
   constructor(private prisma: PrismaService) {}
 
-  async getUsers(): Promise<UserModel[]> {
-    return this.prisma.user.findMany();
+  removeUserPassword(user: UserModel): IPublicUserData {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password, ...publicUsersData } = user;
+
+    return publicUsersData;
   }
 
-  async getUser(id: string): Promise<UserModel> {
-    const user = await this.prisma.user.findUnique({ where: { id } });
-    if (!user) {
+  async getAllUsers(): Promise<UserModel[]> {
+    try {
+      return this.prisma.user.findMany();
+    } catch (error) {
+      console.warn(`An error occur at ${this.getAllUsers.name}`, error);
       throw new HttpException(
-        `User with id ${id} not found`,
-        HttpStatus.NOT_FOUND,
+        UserErrorMessages.UNABLE_TO_GET_LIST_OF_USERS(),
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
+  }
 
-    return user;
+  async getUserById(id: string): Promise<UserModel> {
+    try {
+      return await this.prisma.user.findUniqueOrThrow({
+        where: { id },
+      });
+    } catch (error) {
+      console.warn(`An error occur at ${this.getUserById.name}`, error);
+      throw new NotFoundException(UserErrorMessages.NOT_FOUND_BY_ID(id));
+    }
   }
 
   async getUserByLogin(login: string): Promise<UserModel> {
-    const user = await this.prisma.user.findUnique({ where: { login } });
-    if (!user) {
-      throw new HttpException(
-        `User with login ${login} not found`,
-        HttpStatus.NOT_FOUND,
-      );
-    }
-
-    return user;
-  }
-
-  async createUser(userData: CreateUserDto): Promise<UserModel> {
     try {
-      return await this.prisma.user.create({ data: userData });
-    } catch (error) {
-      console.error(`An error occur at ${this.createUser.name}`, error);
-      throw new HttpException(
-        'Unable to create user with provided data',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-  }
-
-  async updateUser(id: string, userData: UpdateUserDto): Promise<UserModel> {
-    try {
-      return await this.prisma.user.update({
-        where: { id },
-        data: userData,
+      return await this.prisma.user.findUniqueOrThrow({
+        where: { login },
       });
     } catch (error) {
-      console.error(`An error occur at ${this.updateUser.name}`, error);
+      console.warn(`An error occur at ${this.getUserByLogin.name}`, error);
+      throw new NotFoundException(UserErrorMessages.NOT_FOUND_BY_LOGIN(login));
+    }
+  }
+
+  async createUser(
+    userData: CreateUserDto | RegistrationDto,
+  ): Promise<IPublicUserData> {
+    try {
+      const user = await this.prisma.user.create({
+        data: {
+          ...userData,
+          password: await hash(userData.password, 10),
+        },
+      });
+
+      return this.removeUserPassword(user);
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === EPrismaErrorCodes.UniqueConstraintFailed
+      ) {
+        throw new ConflictException(
+          UserErrorMessages.LOGIN_ALREADY_REGISTERED(userData.login),
+        );
+      }
+
+      console.warn(`An error occur at ${this.createUser.name}`, error);
+      throw new BadRequestException(UserErrorMessages.UNABLE_TO_CREATE_USER());
+    }
+  }
+
+  async updateUser(
+    id: string,
+    userData: UpdateUserDto,
+  ): Promise<IPublicUserData> {
+    try {
+      const user = await this.prisma.user.update({
+        where: { id },
+        data: userData.password
+          ? { ...userData, password: await hash(userData.password, 10) }
+          : userData,
+      });
+
+      return this.removeUserPassword(user);
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === EPrismaErrorCodes.UnableToFindDuringAnOperation) {
+          throw new NotFoundException(UserErrorMessages.NOT_FOUND_BY_ID(id));
+        }
+        if (
+          error.code === EPrismaErrorCodes.UniqueConstraintFailed &&
+          userData.login
+        ) {
+          throw new ConflictException(
+            UserErrorMessages.LOGIN_ALREADY_REGISTERED(userData.login),
+          );
+        }
+      }
+
+      console.warn(`An error occur at ${this.updateUser.name}`, error);
       throw new HttpException(
-        `Unable to update user with ID ${id}`,
+        UserErrorMessages.UNABLE_TO_UPDATE_USER(id),
         HttpStatus.BAD_REQUEST,
       );
     }
   }
 
-  async deleteUser(id: string): Promise<UserModel> {
+  async deleteUser(id: string): Promise<IPublicUserData> {
     try {
-      return await this.prisma.user.delete({ where: { id } });
+      const user = await this.prisma.user.delete({ where: { id } });
+
+      return this.removeUserPassword(user);
     } catch (error) {
-      console.error(`An error occur at ${this.deleteUser.name}`, error);
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === EPrismaErrorCodes.UnableToFindDuringAnOperation
+      ) {
+        throw new NotFoundException(UserErrorMessages.NOT_FOUND_BY_ID(id));
+      }
+
+      console.warn(`An error occur at ${this.deleteUser.name}`, error);
       throw new HttpException(
-        `Unable to delete user with ID ${id}`,
+        UserErrorMessages.UNABLE_TO_DELETE_USER(id),
         HttpStatus.BAD_REQUEST,
       );
     }

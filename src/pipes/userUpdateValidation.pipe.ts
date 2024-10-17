@@ -1,14 +1,9 @@
-import {
-  PipeTransform,
-  Injectable,
-  ArgumentMetadata,
-  BadRequestException,
-} from '@nestjs/common';
-import { UpdateUserDto } from '../dto/user.dto';
+import { PipeTransform, Injectable, BadRequestException } from '@nestjs/common';
+import { UpdateUserDto } from 'src/dto/updateUser.dto';
 
 @Injectable()
 export class UserUpdateValidationPipe implements PipeTransform {
-  transform(value: UpdateUserDto, metadata: ArgumentMetadata) {
+  transform(value: UpdateUserDto) {
     if (
       !value.age &&
       !value.login &&
