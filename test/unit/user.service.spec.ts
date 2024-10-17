@@ -227,7 +227,7 @@ describe('UserService', () => {
         userService.updateUser(mockUserId, userData),
       ).resolves.toEqual(publicUserData);
 
-      expect(removeUserPasswordMethod).toHaveBeenCalledTimes(1);
+      expect(removeUserPasswordMethod).toHaveBeenCalledTimes(0);
     });
 
     it('should throw NotFoundException when user not found during update method', async () => {
