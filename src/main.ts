@@ -8,6 +8,17 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  app.enableCors({
+    origin: [
+      'http://localhost:5173',
+      'http://157.230.124.161',
+      'http://165.227.151.89',
+    ], // Allowed origins
+    methods: 'GET,PUT,POST,DELETE', // Allowed methods
+    credentials: true, // Allow credentials (e.g., cookies)
+    allowedHeaders: 'Content-Type, Accept', // Allowed headers
+  });
+
   const config = new DocumentBuilder()
     .setTitle('Test API')
     .setDescription('The test API description')
