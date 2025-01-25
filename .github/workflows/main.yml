@@ -2,7 +2,7 @@ name: Deploy
 on:
   pull_request:
     types: [opened, edited, reopened, synchronize]
-    branches: [ "main", "development" ]
+    branches: [ "main", "development", "test_deploy" ]
     paths-ignore:
       - '.dockerignore'
       - '.env.example'
