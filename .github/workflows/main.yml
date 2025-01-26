@@ -7,7 +7,6 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-
       - name: Get IP of github-actions server
         id: http_request_ip_github_actions
         run: |
