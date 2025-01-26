@@ -1,55 +1,119 @@
 name: Deploy
 on:
-  pull_request:
-    types: [opened, edited, reopened, synchronize]
-    branches: [ "main", "development", "test_deploy" ]
-    paths-ignore:
-      - '.dockerignore'
-      - '.env.example'
-      - 'README.md'
-jobs: 
-  lint: 
+  push:
+    branches: ["test_deploy" ]
+
+jobs:
+  deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: get repo code
-        uses: actions/checkout@v4
-      - name: Caching dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.npm
-          key: node-modules-${{ hashFiles('**/package-lock.json')}}
-      - name: install depend
-        run: npm ci
-      - name: run unit tests
-        run: npm run lint
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - name: get repo code
-        uses: actions/checkout@v4
-      - name: Caching dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.npm
-          key: node-modules-${{ hashFiles('**/package-lock.json')}}
-      - name: install depend
-        run: npm ci
-      - name: run unit tests
-        run: npm run test:unit
-  build:
-    runs-on: ubuntu-latest
-    needs: [lint, test]
-    steps:
-      - name: get repo code
-        uses: actions/checkout@v4
-      - name: Caching dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.npm
-          key: node-modules-${{ hashFiles('**/package-lock.json')}}
-      - name: install depend
-        run: npm ci
-      - name: run build
-        run: npm run build
-      - name: Deploy
-        run: echo Deploy...TODO
+
+      - name: Get IP of github-actions server
+        id: http_request_ip_github_actions
+        run: |
+          response=$(curl -X GET -s -w "\n%{http_code}" https://api.ipify.org)
+          status_code=$(echo "$response" | tail -n1)
+          response_body=$(echo "$response" | sed '$d')
+          echo "Getting ip response: $response_body"
+
+          if [ "$status_code" -ne 200 ]; then
+            echo "HTTP request of getting IP of github-actions server failed with status code $status_code"
+            exit 1
+          fi
+
+          echo "response_ip=$response_body" >> $GITHUB_ENV
+
+      - name: Get FW whitelist settings
+        id: get_fw_whitelist_settings
+        run: |
+          response=$(curl -X GET -s -w "\n%{http_code}" https://api.digitalocean.com/v2/firewalls/a0e56af8-3234-408e-bf69-763555f26b3d \
+            -H "Authorization: Bearer ${{ secrets.DO_KEY_STAGING }}" \
+            -H "Accept: application/json")
+          
+          status_code=$(echo "$response" | tail -n1)
+          response_body=$(echo "$response" | sed '$d')
+
+           if [ "$status_code" -ne 200 ]; then
+            echo "HTTP request of getting whitelist settings failed with status code $status_code"
+            exit 1
+          fi
+
+          echo "white_list=$(echo "$response_body" | jq -c .firewall)" >> $GITHUB_ENV
+
+      - name: Add github IP to whitelist
+        id: add_github_ip_to_whitelist
+        run: |
+          updated_white_list=$(echo '${{ env.white_list }}' | jq '.inbound_rules += [{"protocol": "tcp", "ports": "22", "sources": {"addresses": ["${{ env.response_ip }}"]}}]')
+
+          echo "sending PUT request to add github IP to whitelist"
+          response=$(curl -X PUT -s -w "\n%{http_code}" https://api.digitalocean.com/v2/firewalls/a0e56af8-3234-408e-bf69-763555f26b3d \
+            -H "Authorization: Bearer ${{ secrets.DO_KEY_STAGING }}" \
+            -H "Content-Type: application/json" \
+            -d "$updated_white_list")
+
+          status_code=$(echo "$response" | tail -n1)
+          response_body=$(echo "$response" | sed '$d')
+
+          if [ "$status_code" -ne 200 ]; then
+            echo "HTTP request of adding github IP to whitelist failed with status code $status_code"
+            exit 1
+          fi
+
+      - name: Deploy NodeJS app
+        id: deploy_code
+        env:
+          SSH_PASSPHRASE: ${{ secrets.PASSPHRASE_STAGING }}
+        run: |
+          echo "${{ secrets.SSH_KEY_STAGING }}" > key.pem
+          chmod 600 key.pem
+          eval "$(ssh-agent -s)"
+          echo "$SSH_PASSPHRASE" | ssh-add key.pem
+          ssh -o StrictHostKeyChecking=no -i key.pem -p 22 ${{ secrets.SSH_USERNAME_STAGING }}@${{ secrets.SSH_HOST_STAGING }} << 'EOF'
+            cd /var/www/nest_prisma_pg_test
+            git checkout test_deploy
+            git pull
+
+            rm -rf .env
+            touch .env
+            echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> .env
+            echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> .env
+            echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
+            echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> .env
+            echo "DB_PORT=${{ secrets.DB_PORT }}" >> .env
+            echo "DB_PRISMA_STUDIO_PORT=${{ secrets.DB_PRISMA_STUDIO_PORT }}" >> .env
+            echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
+            echo "JWT_TTL=${{ secrets.JWT_TTL }}" >> .env
+            echo "NODE_ENV=${{ secrets.NODE_ENV }}" >> .env
+            echo "APP_PORT=${{ secrets.APP_PORT }}" >> .env
+
+            export NVM_DIR=~/.nvm
+            source ~/.nvm/nvm.sh
+            
+            npm install
+            npm run build
+
+            pm2 stop my_app
+            pm2 start /var/www/nest_prisma_pg_test/dist/main.js -name my_app
+            pm2 startup ubuntu
+
+            echo 'Deployment successful to digital ocean! TEST'
+          EOF
+
+      - name: Remove ip from white list
+        if: ${{ steps.add_github_ip_to_whitelist.outcome == 'success' && (steps.deploy_code.outcome == 'failure' || always()) }}
+        id: remove_ip_from_whitelist
+        run: |
+          white_list_fixed=$(echo '${{ env.white_list }}' | jq -R 'fromjson? // .')
+
+          echo "sending PUT request to remove github IP to whitelist"
+
+          response=$(curl -X PUT -s -w "\n%{http_code}" https://api.digitalocean.com/v2/firewalls/a0e56af8-3234-408e-bf69-763555f26b3d \
+            -H "Authorization: Bearer ${{ secrets.DO_KEY_STAGING }}" \
+            -H "Content-Type: application/json" \
+            -d "$white_list_fixed")
+
+          status_code=$(echo "$response" | tail -n1)
+          response_body=$(echo "$response" | sed '$d')
+
+          echo "Status code PUT: $status_code"
+          echo "FINISH"
