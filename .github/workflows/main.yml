@@ -68,9 +68,9 @@ jobs:
           eval "$(ssh-agent -s)"
           echo "$SSH_PASSPHRASE" | ssh-add key.pem
           ssh -o StrictHostKeyChecking=no -i key.pem -p 22 ${{ secrets.SSH_USERNAME_STAGING }}@${{ secrets.SSH_HOST_STAGING }} << 'EOF'
-            # cd /var/www/nest_prisma_pg_test
-            # git checkout test_deploy
-            # git pull
+            cd /var/www/nest_prisma_pg_test
+            git checkout test_deploy
+            git pull
 
 
             # rm -rf .env
