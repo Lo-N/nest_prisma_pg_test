@@ -73,7 +73,6 @@ jobs:
             # git checkout test_deploy
             # git pull
 
-
             # rm -rf .env
             # touch .env
             # echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> .env
