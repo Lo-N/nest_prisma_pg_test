@@ -69,32 +69,32 @@ jobs:
           eval "$(ssh-agent -s)"
           echo "$SSH_PASSPHRASE" | ssh-add key.pem
           ssh -o StrictHostKeyChecking=no -i key.pem -p 22 ${{ secrets.SSH_USERNAME_STAGING }}@${{ secrets.SSH_HOST_STAGING }} << 'EOF'
-            cd /var/www/nest_prisma_pg_test
-            git checkout test_deploy
-            git pull
+            # cd /var/www/nest_prisma_pg_test
+            # git checkout test_deploy
+            # git pull
 
-            rm -rf .env
-            touch .env
-            echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> .env
-            echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> .env
-            echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
-            echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> .env
-            echo "DB_PORT=${{ secrets.DB_PORT }}" >> .env
-            echo "DB_PRISMA_STUDIO_PORT=${{ secrets.DB_PRISMA_STUDIO_PORT }}" >> .env
-            echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
-            echo "JWT_TTL=${{ secrets.JWT_TTL }}" >> .env
-            echo "NODE_ENV=${{ secrets.NODE_ENV }}" >> .env
-            echo "APP_PORT=${{ secrets.APP_PORT }}" >> .env
+            # rm -rf .env
+            # touch .env
+            # echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> .env
+            # echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> .env
+            # echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
+            # echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> .env
+            # echo "DB_PORT=${{ secrets.DB_PORT }}" >> .env
+            # echo "DB_PRISMA_STUDIO_PORT=${{ secrets.DB_PRISMA_STUDIO_PORT }}" >> .env
+            # echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
+            # echo "JWT_TTL=${{ secrets.JWT_TTL }}" >> .env
+            # echo "NODE_ENV=${{ secrets.NODE_ENV }}" >> .env
+            # echo "APP_PORT=${{ secrets.APP_PORT }}" >> .env
 
-            export NVM_DIR=~/.nvm
-            source ~/.nvm/nvm.sh
+            # export NVM_DIR=~/.nvm
+            # source ~/.nvm/nvm.sh
             
-            npm install
-            npm run build
+            # npm install
+            # npm run build
 
-            pm2 stop my_app
-            pm2 start /var/www/nest_prisma_pg_test/dist/main.js -name my_app
-            pm2 startup ubuntu
+            # pm2 stop my_app
+            # pm2 start /var/www/nest_prisma_pg_test/dist/main.js -name my_app
+            # pm2 startup ubuntu
 
             echo 'Deployment successful to digital ocean! TEST'
           EOF
