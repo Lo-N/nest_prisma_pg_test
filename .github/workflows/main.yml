@@ -91,8 +91,8 @@ jobs:
             npm install
             npm run build
 
-            # pm2 stop my_app
-            pm2 start /var/www/nest_prisma_pg_test/dist/main.js -name my_app
+            #  pm2 start .....main.js --name my_app
+            pm2 restart my_app
             pm2 startup ubuntu
 
             echo 'Deployment successful to digital ocean! TEST'
