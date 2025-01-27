@@ -63,11 +63,11 @@ jobs:
         env:
           SSH_PASSPHRASE: ${{ secrets.PASSPHRASE_STAGING }}
         run: |
-          echo "${{ secrets.SSH_KEY_STAGING }}" > key.pem
+          echo "${{ secrets.SSH_KEY_GIT_DO }}" > key.pem
           chmod 600 key.pem
           eval "$(ssh-agent -s)"
           echo "$SSH_PASSPHRASE" | ssh-add key.pem
-          ssh -o StrictHostKeyChecking=no -i key.pem -p 22 ${{ secrets.SSH_USERNAME_STAGING }}@${{ secrets.SSH_HOST_STAGING }} << 'EOF'
+          ssh -o StrictHostKeyChecking=no -i key.pem -p 22 ${{ secrets.SSH_USERNAME_GIT }}@${{ secrets.SSH_HOST_STAGING }} << 'EOF'
             cd /var/www/nest_prisma_pg_test
             git checkout test_deploy
             git pull
